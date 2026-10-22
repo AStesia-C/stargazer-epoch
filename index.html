@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<title>观星者纪元 · Stargazer Epoch</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="map"></canvas>
+  <div id="vignette"></div>
+
+  <header id="topbar">
+    <button id="btn-menu" class="icon-btn" aria-label="菜单">☰</button>
+    <div id="chapter-wrap">
+      <div id="chapter-sub">全天星表计划</div>
+      <div id="chapter">第一章 · 回声</div>
+    </div>
+    <button id="btn-sound" class="icon-btn" aria-label="声音">♪</button>
+  </header>
+
+  <section id="hud">
+    <div class="hud-top">
+      <div class="count-wrap">
+        <span id="count">0</span>
+        <span class="count-unit">颗已记录</span>
+      </div>
+      <div class="rate-wrap">
+        <span class="dot"></span><span id="rate">0</span><span class="rate-unit">/秒</span>
+      </div>
+    </div>
+    <div class="bar"><i id="barfill"></i><b id="bar-shine"></b></div>
+    <div class="hud-sub">
+      <span id="vision">视野 I · 邻域</span>
+      <span id="progress-label">0%</span>
+    </div>
+    <div id="mv-line" class="mv-line" style="display:none">
+      <span id="mv-count">宇宙 0 / 10</span>
+      <span id="mv-mod" class="mod"></span>
+    </div>
+  </section>
+
+  <div id="buffbar"></div>
+  <div id="toasts"></div>
+
+  <div id="hint" class="hint">点击星图观测 · 拖动平移 · 双指/滚轮缩放</div>
+
+  <div id="minimap"><canvas id="minimap-canvas" width="132" height="132"></canvas><i id="minimap-ring"></i></div>
+
+  <section id="sheet" class="collapsed">
+    <div id="sheet-handle"><i></i></div>
+    <nav id="tabs">
+      <button class="tab active" data-tab="buildings"><span class="tico">⌬</span><em>设施</em></button>
+      <button class="tab" data-tab="upgrades"><span class="tico">✦</span><em>升级</em></button>
+      <button class="tab" data-tab="tech"><span class="tico">◈</span><em>科技</em></button>
+      <button class="tab" data-tab="mega"><span class="tico">⬡</span><em>巨构</em></button>
+      <button class="tab" data-tab="archive"><span class="tico">▤</span><em>档案</em></button>
+    </nav>
+    <div id="tab-body"></div>
+  </section>
+
+  <div id="modal-root"></div>
+  <div id="cinema"></div>
+  <div id="flash"></div>
+</div>
+<script src="js/util.js"></script>
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/universe.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
