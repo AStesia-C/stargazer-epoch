@@ -17,6 +17,7 @@ const UI = {
     this.dom = {
       app:qs('#app'), count:qs('#count'), rate:qs('#rate'), bar:qs('#barfill'),
       progress:qs('#progress-label'), vision:qs('#vision'), chapter:qs('#chapter'),
+      layerName:qs('#layer-name'), layerUnit:qs('#layer-unit'),
       chapterSub:qs('#chapter-sub'), tabs:qs('#tabs'), body:qs('#tab-body'),
       sheet:qs('#sheet'), toast:qs('#toasts'), modal:qs('#modal-root'),
       buffs:qs('#buffbar'), hint:qs('#hint'), cinema:qs('#cinema'), flash:qs('#flash'),
@@ -883,6 +884,9 @@ const UI = {
       this.dom.progress.textContent = saturated ? '饱和' : ((pct * 100 < 10 && pct > 0 ? (pct*100).toFixed(1) : Math.floor(pct*100)) + '%');
       this.dom.progress.title = saturated ? '视野内星区已全部记录' : (next ? ('下一目标 ' + fmt(next.n) + ' 颗') : '全天星表完成');
       this.dom.vision.textContent = '视野 ' + ROMAN[S.vision-1] + ' · ' + G.Econ.visionInfo().name;
+      const li = G.Renderer.layerInfo();
+      this.dom.layerName.textContent = li.layer.name;
+      this.dom.layerUnit.textContent = li.unit;
 
       const mv = S.mv || {};
       if(mv.on){

@@ -237,6 +237,15 @@ const SHOP_TECH_ORDER = ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11
 
 const UNIVERSE_STARS = 2e11;
 
+const LAYERS = [
+  {id:'sector',   name:'星区', sub:'单颗恒星可见', z:0.42},
+  {id:'const',    name:'星座', sub:'12 星区',      z:0.26},
+  {id:'arm',      name:'旋臂', sub:'125 星座',     z:0.16},
+  {id:'galaxy',   name:'银河', sub:'4 旋臂',       z:0.105},
+  {id:'universe', name:'宇宙', sub:'50 银河',      z:0}
+];
+
+
 const MV_MODS = [
   {id:'mv1', name:'明亮的天空', icon:'✦', desc:'点击 ×3',            click:3},
   {id:'mv2', name:'稠密的星海', icon:'✷', desc:'设施产出 ×2',         build:2},
@@ -255,5 +264,5 @@ function sectorResearch(ring){
 
 G.CFG = {STAR_TYPES, BUILDINGS, CLICK_UPGRADES, TECH, VISIONS, CHAPTERS, MILESTONES,
   CORE_UPGRADES, FACTIONS, MEGAS, ACHIEVEMENTS, LOGS, sectorCap, sectorResearch, SHOP_TECH_ORDER,
-  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS};
+  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS, LAYERS};
 })();

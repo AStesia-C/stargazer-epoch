@@ -76,6 +76,11 @@ body{display:flex;align-items:center;justify-content:center;
 @keyframes sweep{0%{left:-40%}55%{left:110%}100%{left:110%}}
 .hud-sub{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);letter-spacing:.06em}
 .hud-sub span:first-child{color:#b9c9e8}
+.layer-line{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:10px;letter-spacing:.06em;
+  font-family:var(--mono);color:rgba(190,214,255,.5)}
+.layer-line b{font-weight:600;color:rgba(160,210,255,.92);letter-spacing:.14em}
+.layer-line::before{content:'';width:4px;height:4px;border-radius:50%;background:rgba(120,180,255,.85);
+  box-shadow:0 0 8px rgba(120,180,255,.8)}
 .mv-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;
   padding:5px 10px;border-radius:10px;background:rgba(169,139,255,.08);
   border:1px solid rgba(169,139,255,.18);font-size:10px;color:#b9a8e8;

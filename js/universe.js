@@ -25,6 +25,22 @@ const Universe = {
   cap(x, y){ return CFG.sectorCap(this.ring(x, y)); },
   visionRing(){ return CFG.VISIONS[G.S.data.vision - 1].ring; },
   isUnlocked(x, y){ return this.ring(x, y) <= this.visionRing(); },
+  layerOf(z){
+    const L = CFG.LAYERS;
+    for(let i=0;i<L.length;i++) if(z >= L[i].z) return L[i];
+    return L[L.length-1];
+  },
+  layerAt(z){ return this.layerOf(z).id; },
+  pointUnit(x, y){ return this.cap(x, y) / STAR_DENSITY; },
+  layerUnitLabel(layer, x, y){
+    const cap = x == null ? CFG.sectorCap(0) : this.cap(x, y);
+    const unit = cap / STAR_DENSITY;
+    if(layer.id === 'sector') return '1 点 ≈ ' + G.U.fmt(unit) + ' 颗';
+    if(layer.id === 'const') return '1 个星座 = 12 星区';
+    if(layer.id === 'arm') return '1 条旋臂 = 125 星座';
+    if(layer.id === 'galaxy') return '1 个银河 = 4 旋臂';
+    return '1 个宇宙 = 50 银河 · 2,000 亿颗';
+  },
   key(x, y){ return x + ',' + y; },
   get(x, y){
     const v = G.S.data.sectors[this.key(x, y)];
