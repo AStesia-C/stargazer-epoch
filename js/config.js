@@ -58,7 +58,8 @@ const TECH = [
   {id:'t17',name:'弹射共振',   cost:600,  resonance:true, desc:'每次弹射使本次点击产出 ×2.5 叠加（乘法）', req:['t16'], col:3, row:0},
   {id:'t18',name:'节拍器',     cost:15,   combo:1, desc:'连击倍率上限 +2，热度窗口 0.46→0.62 秒', req:['t14'], col:0, row:0},
   {id:'t19',name:'肌肉记忆',   cost:70,   combo:1, desc:'连击增长更快，上限再 +2，断连衰减更慢', req:['t18'], col:1, row:0},
-  {id:'t20',name:'恒星心跳',   cost:320,  combo:1, desc:'连击上限 ×10，持续加成翻倍', req:['t19'], col:0, row:1}
+  {id:'t20',name:'恒星心跳',   cost:320,  combo:1, desc:'连击上限 ×10，持续加成翻倍', req:['t19'], col:0, row:1},
+  {id:'t21',name:'恒星心律',   cost:1200, combo:1, uncap:true, desc:'解除连击上限：超过 800 连后按对数继续增长（每 10 倍连击 +3×）', req:['t20'], col:0, row:3}
 ];
 
 const COMBO = {

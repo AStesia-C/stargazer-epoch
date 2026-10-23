@@ -261,8 +261,9 @@ const Econ = {
     const now = U.now();
     const gap = S.comboT ? Math.max(1, now - S.comboT) : 0;
     const win = C.window[tier];
+    const maxStreak = (S.tech && S.tech.t21) ? 999999 : 999;
     if(gap > 0 && gap < win){
-      S.combo = Math.min(999, (S.combo || 1) + 1);
+      S.combo = Math.min(maxStreak, (S.combo || 1) + 1);
       S.comboGap = S.comboGap ? S.comboGap * .7 + gap * .3 : gap;
       S.comboSpan = Math.min(C.durSec, (S.comboSpan || 0) + Math.min(gap, 600) / 1000);
     } else {
@@ -275,7 +276,12 @@ const Econ = {
     const sp = U.clamp((520 - (S.comboGap || 260)) / 400, 0, 1);
     const stk = Math.min(C.streakK[tier], (S.combo || 1) * C.streakPer);
     const dur = C.durK[tier] * Math.min(1, (S.comboSpan || 0) / C.durSec);
-    const target = Math.min(C.cap, 1 + C.speedK[tier] * sp + stk + dur);
+    let target = Math.min(C.cap, 1 + C.speedK[tier] * sp + stk + dur);
+    if(S.tech && S.tech.t21 && (S.combo || 1) > 800){
+      const over = (S.combo || 1) - 800;
+      const spanExtra = Math.max(0, (S.comboSpan || 0) - C.durSec) / 120;
+      target = Math.max(target, Math.min(99, C.cap + 3 * Math.log10(1 + over / 800) + spanExtra));
+    }
     S.comboVal = Math.max(S.comboVal || 1, target);
     return S.comboVal;
   },
