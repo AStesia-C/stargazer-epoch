@@ -34,11 +34,11 @@ const Universe = {
   pointUnit(x, y){ return this.cap(x, y) / STAR_DENSITY; },
   layerUnitLabel(layer){
     const H = CFG.HIERARCHY, f = G.U.fmt;
-    if(layer.id === 'sector') return '1 点 ≈ ' + f(Math.round(H.starsPerDot)) + ' 颗 · 1 星区 = ' + f(Math.round(H.starsPerSector)) + ' 颗';
-    if(layer.id === 'const') return '1 星座 = 12 星区 ≈ ' + f(H.starsPerConst) + ' 颗';
-    if(layer.id === 'arm') return '1 旋臂 = 625 星座 ≈ ' + f(H.starsPerArm) + ' 颗';
-    if(layer.id === 'galaxy') return '1 银河 = 4 旋臂 ≈ ' + f(H.starsPerGalaxy) + ' 颗';
-    return '1 宇宙 = 50 银河 · ' + f(CFG.UNIVERSE_STARS) + ' 颗';
+    if(layer.id === 'sector') return '每点 ' + f(Math.round(H.starsPerDot)) + ' 颗';
+    if(layer.id === 'const') return '星座 · ' + f(H.starsPerConst);
+    if(layer.id === 'arm') return '旋臂 · ' + f(H.starsPerArm);
+    if(layer.id === 'galaxy') return '银河 · ' + f(H.starsPerGalaxy);
+    return '宇宙 · ' + f(CFG.UNIVERSE_STARS);
   },
   key(x, y){ return x + ',' + y; },
   get(x, y){
