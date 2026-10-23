@@ -186,8 +186,7 @@ const Renderer = {
   visionRadius(){ return (CFG.VISIONS[G.S.data.vision - 1].ring + .55) * S; },
   layerInfo(){
     const l = Uni.layerOf(this.cam.zoom);
-    const sec = Uni.sectorAtWorld(this.cam.x, this.cam.y);
-    return {layer:l, unit:Uni.layerUnitLabel(l, sec.x, sec.y)};
+    return {layer:l, unit:Uni.layerUnitLabel(l)};
   },
 
   flyTo(x, y, zoom, dur){
@@ -748,13 +747,13 @@ const Renderer = {
     if(hit) return hit;
     const rng = U.mulberry32((bx*374761393 ^ by*668265263 ^ 0x2f6b1a3)|0);
     const pts = [];
-    for(let i=0;i<6;i++){
-      const sx = bx*2 + (i % 2), sy = by*2 + ((i>>1) % 2);
+    for(let i=0;i<8;i++){
+      const sx = bx*3 + (i % 3), sy = by*4 + (Math.floor(i/3) % 4);
       const arr = Uni.generate(sx, sy);
       const st = arr[Math.floor(rng()*arr.length)];
       if(st) pts.push({wx:st.wx, wy:st.wy, sx, sy, t:st.t, type:st.type});
     }
-    const cx = (bx*2 + .5)*S, cy = (by*2 + .5)*S;
+    const cx = (bx*3 + 1.5)*S, cy = (by*4 + 2)*S;
     pts.sort((a,b)=> Math.atan2(a.wy-cy, a.wx-cx) - Math.atan2(b.wy-cy, b.wx-cx));
     const v = {pts, cx, cy};
     if(this.constCache.size > 1200) this.constCache.clear();
@@ -775,11 +774,11 @@ const Renderer = {
     for(const key in G.S.data.sectors){
       const ci = key.indexOf(',');
       const sx = +key.slice(0, ci), sy = +key.slice(ci+1);
-      const bx = Math.floor(sx/2), by = Math.floor(sy/2);
+      const bx = Math.floor(sx/3), by = Math.floor(sy/4);
       const bk = bx + ',' + by;
       if(seen.has(bk)) continue;
       seen.add(bk);
-      const wx = (bx*2 + 1)*S, wy = (by*2 + 1)*S;
+      const wx = (bx*3 + 1.5)*S, wy = (by*4 + 2)*S;
       const px = wx*z + this.cx - cam.x*z, py = wy*z + this.cy - cam.y*z;
       if(px < -120 || px > w+120 || py < -120 || py > h+120) continue;
       if(++blocks > 320) break;
@@ -800,7 +799,7 @@ const Renderer = {
         if(a.x < -20 || a.x > w+20 || a.y < -20 || a.y > h+20) continue;
         if(b.x < -20 || b.x > w+20 || b.y < -20 || b.y > h+20) continue;
         const on = a.on && b.on;
-        ctx.globalAlpha = (on ? (.10 + .34*avg) : .045) * k;
+        ctx.globalAlpha = (on ? (.09 + .30*avg) : .03) * k;
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
       }
       for(const f of sp){

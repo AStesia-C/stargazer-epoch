@@ -240,10 +240,25 @@ const UNIVERSE_STARS = 2e11;
 const LAYERS = [
   {id:'sector',   name:'星区', sub:'单颗恒星可见', z:0.42},
   {id:'const',    name:'星座', sub:'12 星区',      z:0.26},
-  {id:'arm',      name:'旋臂', sub:'125 星座',     z:0.16},
+  {id:'arm',      name:'旋臂', sub:'625 星座',     z:0.16},
   {id:'galaxy',   name:'银河', sub:'4 旋臂',       z:0.105},
   {id:'universe', name:'宇宙', sub:'50 银河',      z:0}
 ];
+
+const HIERARCHY = {
+  dotsPerSector: 118,
+  sectorsPerConst: 12,
+  constsPerArm: 625,
+  armsPerGalaxy: 4,
+  galaxiesPerUniverse: 50
+};
+HIERARCHY.sectorsPerUniverse = HIERARCHY.galaxiesPerUniverse * HIERARCHY.armsPerGalaxy *
+  HIERARCHY.constsPerArm * HIERARCHY.sectorsPerConst;
+HIERARCHY.starsPerSector = UNIVERSE_STARS / HIERARCHY.sectorsPerUniverse;
+HIERARCHY.starsPerDot = HIERARCHY.starsPerSector / HIERARCHY.dotsPerSector;
+HIERARCHY.starsPerConst = HIERARCHY.starsPerSector * HIERARCHY.sectorsPerConst;
+HIERARCHY.starsPerArm = HIERARCHY.starsPerConst * HIERARCHY.constsPerArm;
+HIERARCHY.starsPerGalaxy = HIERARCHY.starsPerArm * HIERARCHY.armsPerGalaxy;
 
 
 const MV_MODS = [
@@ -264,5 +279,5 @@ function sectorResearch(ring){
 
 G.CFG = {STAR_TYPES, BUILDINGS, CLICK_UPGRADES, TECH, VISIONS, CHAPTERS, MILESTONES,
   CORE_UPGRADES, FACTIONS, MEGAS, ACHIEVEMENTS, LOGS, sectorCap, sectorResearch, SHOP_TECH_ORDER,
-  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS, LAYERS};
+  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS, LAYERS, HIERARCHY};
 })();
