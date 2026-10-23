@@ -276,7 +276,13 @@ const Renderer = {
       if(this.drag){
         const d = this.drag;
         this.drag = null;
-        if(d.moved < 8 && U.now() - d.t < 420){
+        const quick = U.now() - d.t < 380;
+        const near = Math.hypot(p.x - d.sx, p.y - d.sy) < 14;
+        if(d.moved < 9 && quick){
+          this.handleTap(p.x, p.y);
+        } else if(quick && near){
+          this.cam.x = this.target.x = d.camx;
+          this.cam.y = this.target.y = d.camy;
           this.handleTap(p.x, p.y);
         }
       }
@@ -292,11 +298,7 @@ const Renderer = {
       const factor = Math.exp(-e.deltaY * .0016);
       this.zoomAt(p.x, p.y, this.cam.zoom * factor);
     }, {passive:false});
-    cv.addEventListener('dblclick', (e)=>{
-      const p = pos(e);
-      const w = this.world(p.x, p.y);
-      this.flyTo(w.x, w.y, U.clamp(this.cam.zoom * 1.9, .085, 5.5), 420);
-    });
+    cv.addEventListener('dblclick', (e)=>{ e.preventDefault(); });
   },
 
   zoomAt(sx, sy, zoom, instant){
