@@ -66,6 +66,7 @@ const COMBO = {
   cap:10,
   window:[460, 620, 760, 820],
   speedK:[1.2, 1.8, 2.2, 2.5],
+  cpsFull:[8, 8, 7, 6],
   streakK:[2.0, 3.6, 4.4, 5.2],
   streakPer:.012,
   durK:[.5, 1.0, 1.2, 1.5],

@@ -40,6 +40,7 @@ function defaultState(){
     comboVal:1,
     comboGap:0,
     comboSpan:0,
+    clickTimes:[],
     stats:{
       totalObserved:0, clicks:0, crits:0, meteors:0, bestCombo:0,
       buildingsBuilt:0, megasBuilt:0, prestiges:0, playTime:0, runs:1,

@@ -262,6 +262,10 @@ const Econ = {
     const gap = S.comboT ? Math.max(1, now - S.comboT) : 0;
     const win = C.window[tier];
     const maxStreak = (S.tech && S.tech.t21) ? 999999 : 999;
+    S.clickTimes = (S.clickTimes || []).filter(x => now - x < 1000);
+    S.clickTimes.push(now);
+    if(S.clickTimes.length > 48) S.clickTimes.shift();
+    const cps = S.clickTimes.length;
     if(gap > 0 && gap < win){
       S.combo = Math.min(maxStreak, (S.combo || 1) + 1);
       S.comboGap = S.comboGap ? S.comboGap * .7 + gap * .3 : gap;
@@ -273,7 +277,7 @@ const Econ = {
     }
     S.comboT = now;
     if(S.combo > (S.stats.bestCombo || 0)) S.stats.bestCombo = S.combo;
-    const sp = U.clamp((520 - (S.comboGap || 260)) / 400, 0, 1);
+    const sp = U.clamp((cps - 1) / Math.max(1, C.cpsFull[tier] - 1), 0, 1);
     const stk = Math.min(C.streakK[tier], (S.combo || 1) * C.streakPer);
     const dur = C.durK[tier] * Math.min(1, (S.comboSpan || 0) / C.durSec);
     let target = Math.min(C.cap, 1 + C.speedK[tier] * sp + stk + dur);
