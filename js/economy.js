@@ -277,14 +277,18 @@ const Econ = {
     }
     S.comboT = now;
     if(S.combo > (S.stats.bestCombo || 0)) S.stats.bestCombo = S.combo;
-    const sp = U.clamp((cps - 1) / Math.max(1, C.cpsFull[tier] - 1), 0, 1);
-    const stk = Math.min(C.streakK[tier], (S.combo || 1) * C.streakPer);
-    const dur = C.durK[tier] * Math.min(1, (S.comboSpan || 0) / C.durSec);
-    let target = Math.min(C.cap, 1 + C.speedK[tier] * sp + stk + dur);
-    if(S.tech && S.tech.t21 && (S.combo || 1) > 800){
-      const over = (S.combo || 1) - 800;
-      const spanExtra = Math.max(0, (S.comboSpan || 0) - C.durSec) / 120;
-      target = Math.max(target, Math.min(99, C.cap + 3 * Math.log10(1 + over / 800) + spanExtra));
+    let top = C.cpsTop[tier];
+    if((S.comboSpan || 0) >= C.durSec) top = Math.max(6, Math.round(top * .8));
+    let target;
+    if(cps <= 5){
+      target = 1 + U.clamp((cps - 1) / 4, 0, 1);
+    } else {
+      target = 2 + U.clamp((cps - 5) / Math.max(1, top - 5), 0, 1) * (C.cap - 2);
+    }
+    if(S.tech && S.tech.t21 && cps > top){
+      const streak = Math.max(0, (S.combo || 1) - 800) / 800;
+      target = Math.min(99, target + (cps - top) / Math.max(1, top - 5) * (C.cap - 2)
+        + 3 * Math.log10(1 + streak));
     }
     S.comboVal = Math.max(S.comboVal || 1, target);
     return S.comboVal;
