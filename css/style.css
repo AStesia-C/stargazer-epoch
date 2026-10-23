@@ -277,3 +277,7 @@ body{display:flex;align-items:center;justify-content:center;
   padding:8px;border-radius:10px;background:rgba(0,0,0,.8);border:1px solid #345;font-family:var(--mono);font-size:9px;color:#9cf}
 #debug.on{display:flex}
 #debug button{font-family:var(--mono);font-size:9px;padding:3px 6px;background:#123;color:#9cf;border:1px solid #345;border-radius:4px;cursor:pointer}
+
+.combo-chip{margin-left:auto;font-style:normal;font-family:var(--mono);font-size:10px;
+  color:#d6b4ff;letter-spacing:.04em;padding:1px 6px;border-radius:6px;
+  background:rgba(169,139,255,.12);border:1px solid rgba(169,139,255,.22)}

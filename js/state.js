@@ -37,6 +37,9 @@ function defaultState(){
     mv:{on:false, lit:0, life:0, req:10, mult:1, mod:null, cycles:0},
     combo:0,
     comboT:0,
+    comboVal:1,
+    comboGap:0,
+    comboSpan:0,
     stats:{
       totalObserved:0, clicks:0, crits:0, meteors:0, bestCombo:0,
       buildingsBuilt:0, megasBuilt:0, prestiges:0, playTime:0, runs:1,

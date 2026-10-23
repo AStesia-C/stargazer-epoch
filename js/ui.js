@@ -17,7 +17,7 @@ const UI = {
     this.dom = {
       app:qs('#app'), count:qs('#count'), rate:qs('#rate'), bar:qs('#barfill'),
       progress:qs('#progress-label'), vision:qs('#vision'), chapter:qs('#chapter'),
-      layerName:qs('#layer-name'), layerUnit:qs('#layer-unit'),
+      layerName:qs('#layer-name'), layerUnit:qs('#layer-unit'), combo:qs('#combo-chip'),
       chapterSub:qs('#chapter-sub'), tabs:qs('#tabs'), body:qs('#tab-body'),
       sheet:qs('#sheet'), toast:qs('#toasts'), modal:qs('#modal-root'),
       buffs:qs('#buffbar'), hint:qs('#hint'), cinema:qs('#cinema'), flash:qs('#flash'),
@@ -763,6 +763,8 @@ const UI = {
       '<b style="color:#cfe2ff">星尘</b>购买观测设施，它们会自动观测。<br>' +
       '<b style="color:#cfe2ff">星区完成</b>会产出研究点，用来解锁科技与视野。<br>' +
       '<b style="color:#cfe2ff">范围点亮 / 弹射观测</b>：科技树左下角的分支，点击会点亮一片星，并像光电一样弹射出去，连锁倍率相乘。<br>' +
+      '<b style="color:#cfe2ff">连击</b>：点得越快、连得越久，倍率越高（最高 ×10）。断连后倍率会逐渐衰减，不会瞬间清零。<br>' +
+      '<b style="color:#cfe2ff">五层视角</b>：星区 → 星座 → 旋臂 → 银河 → 宇宙。星区/星座层可以观测，越往外点一下记录的范围越大；旋臂以上只能看，点一下会自动飞近。<br>' +
       '<b style="color:#cfe2ff">视野</b>决定你能观测到多远——拖动星图，把边缘的黑暗点亮。<br>' +
       '<b style="color:#cfe2ff">跃迁</b>会在 10¹¹ 颗后解锁；之后进入多元宇宙：<br>' +
       '每次观测满 300 亿颗即可<b style="color:#cfe2ff">闭合宇宙</b>（+1 星核、宇宙常数 ×1.15，科技与视野保留），' +
@@ -887,6 +889,15 @@ const UI = {
       const li = G.Renderer.layerInfo();
       this.dom.layerName.textContent = li.layer.name;
       this.dom.layerUnit.textContent = li.unit;
+      const cv = S.comboVal || 1;
+      if(this.dom.combo){
+        if(cv > 1.05){
+          this.dom.combo.style.display = '';
+          this.dom.combo.textContent = '连击 ×' + cv.toFixed(1);
+        } else {
+          this.dom.combo.style.display = 'none';
+        }
+      }
 
       const mv = S.mv || {};
       if(mv.on){

@@ -55,8 +55,23 @@ const TECH = [
   {id:'t14',name:'范围点亮',   cost:6,    area:5, click:1.5, desc:'点击时同时点亮周围 5 颗星，点击 ×1.5', col:0, row:2},
   {id:'t15',name:'弹射观测',   cost:25,   bounce:{times:1, stars:3}, desc:'点亮后向邻近恒星弹射 1 次，每次 3 颗', req:['t14'], col:1, row:1},
   {id:'t16',name:'弹射强化',   cost:120,  bounce:{times:2, stars:6}, desc:'弹射 2 次，每次 6 颗，点击产出大幅提升', req:['t15'], col:2, row:0},
-  {id:'t17',name:'弹射共振',   cost:600,  resonance:true, desc:'每次弹射使本次点击产出 ×2.5 叠加（乘法）', req:['t16'], col:3, row:0}
+  {id:'t17',name:'弹射共振',   cost:600,  resonance:true, desc:'每次弹射使本次点击产出 ×2.5 叠加（乘法）', req:['t16'], col:3, row:0},
+  {id:'t18',name:'节拍器',     cost:15,   combo:1, desc:'连击倍率上限 +2，热度窗口 0.46→0.62 秒', req:['t14'], col:0, row:0},
+  {id:'t19',name:'肌肉记忆',   cost:70,   combo:1, desc:'连击增长更快，上限再 +2，断连衰减更慢', req:['t18'], col:1, row:0},
+  {id:'t20',name:'恒星心跳',   cost:320,  combo:1, desc:'连击上限 ×10，持续加成翻倍', req:['t19'], col:0, row:1}
 ];
+
+const COMBO = {
+  cap:10,
+  window:[460, 620, 760, 820],
+  speedK:[1.2, 1.8, 2.2, 2.5],
+  streakK:[2.0, 3.6, 4.4, 5.2],
+  streakPer:.012,
+  durK:[.5, 1.0, 1.2, 1.5],
+  durSec:60,
+  decay:[.55, .42, .36, .32],
+  dpsShare:.05
+};
 
 const VISIONS = [
   {ring:3,  name:'邻域',   chapter:0, scale:1},
@@ -279,5 +294,5 @@ function sectorResearch(ring){
 
 G.CFG = {STAR_TYPES, BUILDINGS, CLICK_UPGRADES, TECH, VISIONS, CHAPTERS, MILESTONES,
   CORE_UPGRADES, FACTIONS, MEGAS, ACHIEVEMENTS, LOGS, sectorCap, sectorResearch, SHOP_TECH_ORDER,
-  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS, LAYERS, HIERARCHY};
+  DARK_TECH, WARN_STAGES, MV_MODS, UNIVERSE_STARS, LAYERS, HIERARCHY, COMBO};
 })();

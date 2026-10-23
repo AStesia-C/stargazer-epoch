@@ -184,6 +184,34 @@ const Universe = {
     return {added, completed, overflow: Math.max(0, amount - added)};
   },
 
+  observeConstellation(sx, sy, amount){
+    const bx = Math.floor(sx / 3), by = Math.floor(sy / 4);
+    const list = [];
+    let totalRoom = 0;
+    for(let j=0;j<4;j++) for(let i=0;i<3;i++){
+      const x = bx*3 + i, y = by*4 + j;
+      if(!this.isUnlocked(x, y)) continue;
+      const room = this.cap(x, y) - this.get(x, y);
+      if(room <= 1e-6) continue;
+      list.push({x, y, room});
+      totalRoom += room;
+    }
+    if(!list.length) return {added:0, overflow:amount, completions:[], capped:true, sector:{x:sx, y:sy}, constX:bx, constY:by};
+    const use = Math.min(amount, totalRoom);
+    let left = use, added = 0;
+    const completions = [];
+    for(let k=0;k<list.length;k++){
+      const it = list[k];
+      const share = k === list.length - 1 ? left : use * (it.room / totalRoom);
+      const r = this.observeAt(it.x, it.y, Math.min(share, it.room));
+      added += r.added;
+      left -= r.added;
+      if(r.completed) completions.push({x:it.x, y:it.y});
+      if(left <= 0) break;
+    }
+    return {added, overflow:Math.max(0, amount - added), completions, sector:{x:sx, y:sy}, constX:bx, constY:by};
+  },
+
   lightNear(wx, wy, count, radius, minD, target, widen){
     if(count <= 0) return [];
     const S = G.S.data;

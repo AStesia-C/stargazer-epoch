@@ -120,6 +120,14 @@ const Game = {
       R.addFloat(sx, sy, '视野之外', '#7b8cb0', 11);
       return;
     }
+    if(res.readonly){
+      R.flyTo(wx, wy, .5, 700);
+      if(!this._roHint || U.now() - this._roHint > 6000){
+        this._roHint = U.now();
+        R.addFloat(sx, sy, '这一层只能看 · 正在飞近', '#9fb0cc', 11);
+      }
+      return;
+    }
     if(res.capped){
       R.addRipple(sx, sy, '#5b6b8c');
       R.addFloat(sx, sy, '星区已满 · 向更深处观测', '#9fb0cc', 11);
@@ -151,6 +159,11 @@ const Game = {
     }
     if(combo > 0 && combo % 25 === 0){
       R.addFloat(sx, sy + (res.crit ? 34 : 18), combo + ' 连击', '#c8a6ff', 11);
+    }
+    const cm = res.comboMult || 1;
+    if(cm > 1.35 && (res.crit || this.lastComboText !== Math.round(cm*10))){
+      this.lastComboText = Math.round(cm*10);
+      R.addFloat(sx + 34, sy + (res.crit ? 58 : 26), '连击 ×' + cm.toFixed(1), '#d6b4ff', 11);
     }
     if(near){
       const t = CFG.STAR_TYPES[near.star.type];
@@ -305,8 +318,6 @@ const Game = {
   tick(dt){
     const S = G.S.data;
     Econ.tick(dt, R.cam.x, R.cam.y);
-    S.comboT = S.comboT || 0;
-    if(U.now() - S.comboT > 700) S.combo = 0;
     S.lastSeen = Date.now();
     this.darkT = (this.darkT || 0) + dt;
     if(this.darkT > 3){

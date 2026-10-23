@@ -252,37 +252,77 @@ const Econ = {
     return true;
   },
 
+  comboTier(){
+    const S = G.S.data;
+    return (S.tech && S.tech.t18 ? 1 : 0) + (S.tech && S.tech.t19 ? 1 : 0) + (S.tech && S.tech.t20 ? 1 : 0);
+  },
+  comboUpdate(){
+    const S = G.S.data, C = CFG.COMBO, tier = this.comboTier();
+    const now = U.now();
+    const gap = S.comboT ? Math.max(1, now - S.comboT) : 0;
+    const win = C.window[tier];
+    if(gap > 0 && gap < win){
+      S.combo = Math.min(999, (S.combo || 1) + 1);
+      S.comboGap = S.comboGap ? S.comboGap * .7 + gap * .3 : gap;
+      S.comboSpan = Math.min(C.durSec, (S.comboSpan || 0) + Math.min(gap, 600) / 1000);
+    } else {
+      S.combo = 1;
+      S.comboGap = 0;
+      S.comboSpan = 0;
+    }
+    S.comboT = now;
+    if(S.combo > (S.stats.bestCombo || 0)) S.stats.bestCombo = S.combo;
+    const sp = U.clamp((520 - (S.comboGap || 260)) / 400, 0, 1);
+    const stk = Math.min(C.streakK[tier], (S.combo || 1) * C.streakPer);
+    const dur = C.durK[tier] * Math.min(1, (S.comboSpan || 0) / C.durSec);
+    const target = Math.min(C.cap, 1 + C.speedK[tier] * sp + stk + dur);
+    S.comboVal = Math.max(S.comboVal || 1, target);
+    return S.comboVal;
+  },
+  tickCombo(dt){
+    const S = G.S.data, C = CFG.COMBO, tier = this.comboTier();
+    if(!S.comboVal || S.comboVal <= 1.0001) return;
+    const idle = U.now() - (S.comboT || 0) - C.window[tier];
+    if(idle <= 0) return;
+    S.comboVal = Math.max(1, S.comboVal - C.decay[tier] * dt);
+    S.comboSpan = Math.max(0, (S.comboSpan || 0) - dt * 2);
+    if(idle > 2200){ S.combo = 0; S.comboGap = 0; S.comboSpan = 0; }
+  },
+
   click(wx, wy){
     const S = G.S.data, d = this.d;
     S.stats.clicks++;
-    const t = U.now();
-    if(t - S.comboT < 420) S.combo = Math.min(300, (S.combo||0) + 1);
-    else S.combo = 1;
-    S.comboT = t;
-    if(S.combo > S.stats.bestCombo) S.stats.bestCombo = S.combo;
-    const comboBonus = 1 + Math.min(1, Math.floor(S.combo/10) * .05);
+    const comboMult = this.comboUpdate();
 
     const crit = Math.random() < d.critChance;
-    let stars = d.clickStars * comboBonus * (crit ? 10 : 1) * d.chainMult;
+    let stars = d.clickStars * comboMult * (crit ? 10 : 1) * d.chainMult;
     if(crit) S.stats.crits++;
 
     const sec = Uni.sectorAtWorld(wx, wy);
     if(!Uni.isUnlocked(sec.x, sec.y)){
-      return {gain:0, crit, locked:true, combo:S.combo, stars:0};
+      return {gain:0, crit, locked:true, combo:S.combo, comboMult, stars:0};
     }
-    const res = Uni.observeAt(sec.x, sec.y, stars);
+    const layer = Uni.layerOf(G.Renderer ? G.Renderer.cam.zoom : .6);
+    if(layer.id === 'arm' || layer.id === 'galaxy' || layer.id === 'universe'){
+      return {gain:0, crit:false, readonly:true, layer:layer.id, combo:S.combo, comboMult,
+        stars:0, chain:[], chainMult:1, x:sec.x, y:sec.y};
+    }
+    const res = layer.id === 'const'
+      ? Uni.observeConstellation(sec.x, sec.y, stars)
+      : Uni.observeAt(sec.x, sec.y, stars);
     if(res.added <= 0){
       this.recalc();
-      return {gain:0, crit, locked:false, capped:true, combo:S.combo, stars:0, dust:0,
-        x:sec.x, y:sec.y, chain:[], chainMult:1};
+      return {gain:0, crit, locked:false, capped:true, combo:S.combo, comboMult, stars:0, dust:0,
+        x:sec.x, y:sec.y, layer:layer.id, chain:[], chainMult:1};
     }
     const dustGain = res.added * AVG_VALUE * d.valueMult * (this.faction() && this.faction().id === 'f4' ? .5 : 1);
     S.dust += dustGain;
     if(res.completed) Bus.emit('sectorComplete', {x:sec.x, y:sec.y, research:CFG.sectorResearch(Uni.ring(sec.x,sec.y)), ring:Uni.ring(sec.x,sec.y)});
 
     const chain = [];
-    const litCount = Math.min(14, d.areaStars * (crit ? 10 : 1));
-    const area = Uni.lightNear(wx, wy, litCount, crit ? 88 : 62, 6, 30, true);
+    const litCount = Math.min(14, d.areaStars * (crit ? 10 : 1)) * (layer.id === 'const' ? 2 : 1);
+    const radius = layer.id === 'const' ? 190 : (crit ? 88 : 62);
+    const area = Uni.lightNear(wx, wy, litCount, radius, 6, layer.id === 'const' ? 60 : 30, true);
     for(const pt of area) chain.push({fx:wx, fy:wy, x:pt.x, y:pt.y, type:pt.type, delay:0, hop:0});
     let wave = area;
     for(let h=1; h<=d.bounceTimes; h++){
@@ -301,7 +341,8 @@ const Econ = {
     }
 
     this.recalc();
-    return {gain:res.added, crit, locked:false, combo:S.combo, stars:res.added, dust:dustGain, x:sec.x, y:sec.y,
+    return {gain:res.added, crit, locked:false, combo:S.combo, comboMult, stars:res.added, dust:dustGain,
+      x:sec.x, y:sec.y, layer:layer.id,
       overflow:res.overflow||0, chain, chainMult:d.chainMult};
   },
 
@@ -464,10 +505,12 @@ const Econ = {
 
   tick(dt, camX, camY){
     const S = G.S.data;
+    this.tickCombo(dt);
     this.recalcT = (this.recalcT || 0) + dt;
     if(this.recalcT > .5){ this.recalcT = 0; this.recalc(); }
     const d = this.d;
-    const dps = d.dps;
+    const comboShare = 1 + ((S.comboVal || 1) - 1) * CFG.COMBO.dpsShare;
+    const dps = d.dps * comboShare;
     let added = 0, overflow = 0;
     if(dps > 0){
       const res = Uni.allocate(dps, dt, camX, camY);
