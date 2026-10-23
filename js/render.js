@@ -93,7 +93,7 @@ const Renderer = {
     const app = document.getElementById('app');
     this.w = app.clientWidth;
     this.h = app.clientHeight;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     this.canvas.width = Math.floor(this.w * this.dpr);
     this.canvas.height = Math.floor(this.h * this.dpr);
     this.canvas.style.width = this.w + 'px';
@@ -465,6 +465,13 @@ const Renderer = {
   frame(dt){
     if(!this.ctx) return;
     const ctx = this.ctx;
+    const ms = Math.min(80, dt * 1000);
+    this.ftAvg = (this.ftAvg || 16) * .92 + ms * .08;
+    if(U.now() - (this.qAt || 0) > 1200){
+      if(this.ftAvg > 28 && this.quality > .6){ this.quality = .6; this.qAt = U.now(); }
+      else if(this.ftAvg > 21 && this.quality > .8){ this.quality = .8; this.qAt = U.now(); }
+      else if(this.ftAvg < 14 && this.quality < 1){ this.quality = Math.min(1, this.quality + .1); this.qAt = U.now(); }
+    }
     ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
@@ -544,7 +551,9 @@ const Renderer = {
     }
     const a0 = (.04 + .2*k) * U.clamp((z - .085) / .03, 0, 1);
     let lastA = -1;
-    for(const p of this.galaxyPts){
+    const stride = z < .22 ? 2 : 1;
+    for(let pi=0; pi<this.galaxyPts.length; pi+=stride){
+      const p = this.galaxyPts[pi];
       const x = px(p.x), y = py(p.y);
       if(x < -8 || x > this.w+8 || y < -8 || y > this.h+8) continue;
       const s = Math.max(1, p.s * Math.max(.7, z*7));
@@ -595,7 +604,9 @@ const Renderer = {
     }
 
     if(z >= .22){
-      const maxStars = z > .9 ? 4200 : 5200;
+      const area = this.w * this.h;
+      const budget = U.clamp(area / 120, 1600, 5200) * (this.quality < .8 ? .62 : 1);
+      const maxStars = Math.min(z > .9 ? 4200 : 5200, Math.round(budget));
       let drawn = 0;
       let litDrawn = 0;
       const step = z < .34 ? 4 : z < .5 ? 2 : 1;
@@ -646,8 +657,8 @@ const Renderer = {
               continue;
             }
             if(!isLit){
-              if(z > .3){
-                ctx.globalAlpha = z > .62 ? .13 : .09;
+              if(z > .62){
+                ctx.globalAlpha = .13;
                 ctx.fillStyle = '#93a6c6';
                 ctx.fillRect(px, py, .9, .9);
               }
@@ -655,10 +666,12 @@ const Renderer = {
             }
             const tw = .84 + Math.sin(tick*1.7 + st.ph)*.16;
             const size = (type.size * (.82 + Math.sqrt(z)*1.38) * st.sz) * tw;
-            if(z < .3 || dim || litDrawn > maxStars){
-              ctx.globalAlpha = z < .3 ? .55 : .82;
-              ctx.fillStyle = type.id === 'black' ? type.color : type.core;
-              ctx.fillRect(px-size*.4, py-size*.4, Math.max(1, size*.8), Math.max(1, size*.8));
+            if(z < .3 || dim || litDrawn > maxStars * (z < .68 ? .34 : 1)){
+              ctx.globalAlpha = z < .3 ? .62 : .92;
+              ctx.fillStyle = type.color;
+              const cs = Math.max(1, size*.8);
+              ctx.fillRect(px-cs/2, py-cs/2, cs, cs);
+              if(size >= 1.35){ ctx.fillStyle = type.core; ctx.fillRect(px-.5, py-.5, 1.2, 1.2); }
               litDrawn++;
               continue;
             }
@@ -722,7 +735,8 @@ const Renderer = {
     const tint = CFG.CHAPTERS[G.Econ.chapterIndex()].tint;
     ctx.globalCompositeOperation = 'lighter';
     for(let arm=0; arm<3; arm++){
-      for(let pass=0; pass<2; pass++){
+      const passes = this.quality < 1 ? 1 : 2;
+      for(let pass=0; pass<passes; pass++){
         ctx.beginPath();
         for(let i=0;i<=40;i++){
           const t = i/40;
@@ -761,16 +775,9 @@ const Renderer = {
     return v;
   },
 
-  drawConstellations(ctx, z){
-    if(z < .24 || z > .62) return;
-    const k = U.clamp(Math.min((z - .24) / .05, (.62 - z) / .14), 0, 1);
-    if(k <= .01) return;
-    const cam = this.cam, w = this.w, h = this.h;
-    const seen = new Set();
-    let blocks = 0;
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.lineCap = 'round';
-    const lw = Math.max(.65, 1.3*Math.sqrt(z));
+  constIndex:null, constIndexAt:0,
+  buildConstIndex(){
+    const seen = new Set(), out = [];
     for(const key in G.S.data.sectors){
       const ci = key.indexOf(',');
       const sx = +key.slice(0, ci), sy = +key.slice(ci+1);
@@ -778,11 +785,28 @@ const Renderer = {
       const bk = bx + ',' + by;
       if(seen.has(bk)) continue;
       seen.add(bk);
-      const wx = (bx*3 + 1.5)*S, wy = (by*4 + 2)*S;
-      const px = wx*z + this.cx - cam.x*z, py = wy*z + this.cy - cam.y*z;
+      out.push({bx, by, wx:(bx*3 + 1.5)*S, wy:(by*4 + 2)*S});
+    }
+    this.constIndex = out;
+    this.constIndexAt = U.now();
+  },
+  drawConstellations(ctx, z){
+    if(z < .24 || z > .62) return;
+    const k = U.clamp(Math.min((z - .24) / .05, (.62 - z) / .14), 0, 1);
+    if(k <= .01) return;
+    const cam = this.cam, w = this.w, h = this.h;
+    const now = U.now();
+    if(!this.constIndex || now - this.constIndexAt > 900) this.buildConstIndex();
+    let blocks = 0;
+    const blockCap = this.quality < .8 ? 170 : 320;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    const lw = Math.max(.65, 1.3*Math.sqrt(z));
+    for(const blk of this.constIndex){
+      const px = blk.wx*z + this.cx - cam.x*z, py = blk.wy*z + this.cy - cam.y*z;
       if(px < -120 || px > w+120 || py < -120 || py > h+120) continue;
-      if(++blocks > 320) break;
-      const fig = this.constFigure(bx, by);
+      if(++blocks > blockCap) break;
+      const fig = this.constFigure(blk.bx, blk.by);
       let sum = 0;
       for(const p of fig.pts) sum += Uni.progress(p.sx, p.sy);
       const avg = sum / Math.max(1, fig.pts.length);
@@ -807,7 +831,7 @@ const Renderer = {
         if(f.x < -20 || f.x > w+20 || f.y < -20 || f.y > h+20) continue;
         ctx.globalAlpha = (.28 + .45*avg) * k;
         ctx.fillStyle = '#dff0ff';
-        ctx.beginPath(); ctx.arc(f.x, f.y, Math.max(.9, 1.4*Math.sqrt(z)), 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(f.x, f.y, Math.max(.9, 1.4*Math.sqrt(z)), 0, Math.PI*2); ctx.fill()
       }
     }
     ctx.globalAlpha = 1;
@@ -815,9 +839,8 @@ const Renderer = {
     ctx.lineCap = 'butt';
   },
 
-  drawHeat(ctx, R){
-    const z = this.cam.zoom, cam = this.cam;
-    const hf = this.heatFade == null ? 1 : this.heatFade;
+  heatCells:null, heatMap:null, heatR:-1, heatAt:0,
+  heatBuild(R){
     const G3 = 4;
     const maxG = Math.ceil((Uni.maxR + 1) / G3);
     const cells = [];
@@ -835,24 +858,39 @@ const Renderer = {
         if(p < .004 && dpp < .004) continue;
         const jx = (U.hash2(gx, gy, 7) - .5) * S * 2.2;
         const jy = (U.hash2(gx, gy, 19) - .5) * S * 2.2;
-        const cxw = (gx*G3 + 1.5) * S + jx;
-        const cyw = (gy*G3 + 1.5) * S + jy;
-        cells.push({gx, gy, p, dp: dpp, px: cxw*z + this.cx - cam.x*z, py: cyw*z + this.cy - cam.y*z,
-          gs: S * G3 * z * (.8 + U.hash2(gx,gy,23) * 1.7)});
+        cells.push({gx, gy, p, dp: dpp,
+          wx: (gx*G3 + 1.5) * S + jx,
+          wy: (gy*G3 + 1.5) * S + jy,
+          gm: .8 + U.hash2(gx,gy,23) * 1.7});
       }
     }
-    ctx.globalCompositeOperation = 'lighter';
-    const key = (a,b)=>a + ',' + b;
-    const map = new Map(cells.map(c=>[key(c.gx,c.gy), c]));
-    ctx.lineCap = 'round';
+    this.heatCells = cells;
+    this.heatR = R;
+    this.heatAt = U.now();
+    this.heatMap = new Map();
+    for(const c of cells) this.heatMap.set(c.gx + ',' + c.gy, c);
+  },
+  drawHeat(ctx, R){
+    const z = this.cam.zoom, cam = this.cam;
+    const hf = this.heatFade == null ? 1 : this.heatFade;
+    const now = U.now();
+    if(!this.heatCells || this.heatR !== R || now - this.heatAt > 420) this.heatBuild(R);
+    const cells = this.heatCells, map = this.heatMap;
+    const ox = this.cx - cam.x*z, oy = this.cy - cam.y*z;
     for(const c of cells){
-      if(c.p < .45) continue;
-      const nb = [map.get(key(c.gx+1,c.gy)), map.get(key(c.gx,c.gy+1))];
+      c.px = c.wx*z + ox; c.py = c.wy*z + oy;
+      c.gs = S * 4 * z * c.gm;
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = CFG.CHAPTERS[G.Econ.chapterIndex()].tint;
+    for(const c of cells){
+      if(c.p < .45 || c.px + c.gs < 0 || c.px - c.gs > this.w || c.py + c.gs < 0 || c.py - c.gs > this.h) continue;
+      const nb = [map.get((c.gx+1) + ',' + c.gy), map.get(c.gx + ',' + (c.gy+1))];
       for(const b of nb){
         if(!b || b.p < .45) continue;
         const a = Math.min(c.p, b.p);
         ctx.globalAlpha = Math.min(.16, a * .16) * hf;
-        ctx.strokeStyle = CFG.CHAPTERS[G.Econ.chapterIndex()].tint;
         ctx.lineWidth = Math.max(1, 18 * z * a);
         ctx.beginPath(); ctx.moveTo(c.px, c.py); ctx.lineTo(b.px, b.py); ctx.stroke();
       }
@@ -862,7 +900,7 @@ const Renderer = {
       if(c.p > .004){
         ctx.globalAlpha = Math.min(.38, .02 + Math.pow(c.p, .62) * .46) * hf;
         ctx.drawImage(this.sectorGlow, c.px - c.gs/2, c.py - c.gs/2, c.gs, c.gs);
-        if(c.p > .6){
+        if(c.p > .6 && this.quality >= 1){
           ctx.globalAlpha = (c.p - .6) * .5 * hf;
           const gs2 = c.gs * .5;
           ctx.drawImage(this.sectorGlow, c.px - gs2/2, c.py - gs2/2, gs2, gs2);
