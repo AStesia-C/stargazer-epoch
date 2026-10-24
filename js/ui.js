@@ -23,7 +23,8 @@ const UI = {
       buffs:qs('#buffbar'), hint:qs('#hint'), cinema:qs('#cinema'), flash:qs('#flash'),
       sound:qs('#btn-sound'), menu:qs('#btn-menu'),
       handle:qs('#sheet-handle'), minimap:qs('#minimap'),
-      mvLine:qs('#mv-line'), mvCount:qs('#mv-count'), mvMod:qs('#mv-mod')
+      mvLine:qs('#mv-line'), mvCount:qs('#mv-count'), mvMod:qs('#mv-mod'),
+      wallet:qs('#wallet'), dust:qs('#dust'), dustRate:qs('#dust-rate'), research:qs('#research')
     };
     this.bindChrome();
     this.buildTab(this.tab);
@@ -76,6 +77,14 @@ const UI = {
       this.switchTab(t);
     });
     this.dom.menu.addEventListener('click', ()=>this.openMenu());
+    if(this.dom.wallet){
+      this.dom.wallet.addEventListener('click', (e)=>{
+        const c = e.target.closest('.w');
+        if(!c) return;
+        this.switchTab(c.dataset.tab);
+        this.dom.sheet.classList.add('expanded');
+      });
+    }
     if(this.dom.mvLine){
       this.dom.mvLine.addEventListener('click', ()=>{
         if(G.Econ.sealReady()) this.openSeal();
@@ -908,6 +917,13 @@ const UI = {
       this.lastHud = now;
       this.dom.count.textContent = fmt(S.observed);
       this.dom.rate.textContent = fmt(d.dps);
+      if(this.dom.dust){
+        this.dom.dust.textContent = fmt(S.dust);
+        this.dom.dustRate.textContent = '+' + fmt(d.dustPerSec || 0) + '/秒';
+        this.dom.research.textContent = fmt(S.research);
+        const canResearch = CFG.TECH.some(t=>!S.tech[t.id] && G.Econ.techAvailable(t) && S.research >= G.Econ.techCost(t));
+        this.dom.research.parentElement.classList.toggle('ready', canResearch);
+      }
       let next = null;
       for(const m of CFG.MILESTONES){ if(S.observed < m.n){ next = m; break; } }
       const capv = next ? next.n : CFG.MILESTONES[CFG.MILESTONES.length-1].n;

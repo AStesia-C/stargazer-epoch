@@ -137,8 +137,10 @@ const Econ = {
       }
     }
 
+    const facCut = (fac && fac.id === 'f4') ? .5 : 1;
     this.derived = {
-      dps, global, techMult, coreMult, collection: this.collectionBonus(), mega: this.megaMult(),
+      dps, dustPerSec: dps * AVG_VALUE * valueMult * facCut,
+      global, techMult, coreMult, collection: this.collectionBonus(), mega: this.megaMult(),
       visionScale: vis.scale, clickMul, clickPct, clickStars, critChance,
       valueMult, offlineEff, offlineHours, perBuilding, coreRate,
       areaStars, bounceTimes, bounceStars, resonance, chainMult,
