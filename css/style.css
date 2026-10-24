@@ -91,6 +91,18 @@ body{display:flex;align-items:center;justify-content:center;
 .layer-line b{font-weight:600;color:rgba(160,210,255,.92);letter-spacing:.14em}
 .layer-line::before{content:'';width:4px;height:4px;border-radius:50%;background:rgba(120,180,255,.85);
   box-shadow:0 0 8px rgba(120,180,255,.8)}
+.layer-line.intro b{animation:layerIntro 2.6s ease-out both}
+.layer-line.intro::before{animation:layerDot 2.6s ease-out both}
+@keyframes layerIntro{
+  0%{color:#fff;text-shadow:0 0 18px rgba(140,200,255,.9);letter-spacing:.3em}
+  18%{color:#ffe6b0;text-shadow:0 0 22px rgba(255,205,110,.85);letter-spacing:.16em}
+  100%{color:rgba(160,210,255,.92);text-shadow:none;letter-spacing:.14em}
+}
+@keyframes layerDot{
+  0%{box-shadow:0 0 22px 6px rgba(160,210,255,.95)}
+  70%{box-shadow:0 0 14px 3px rgba(255,205,110,.6)}
+  100%{box-shadow:0 0 8px rgba(120,180,255,.8)}
+}
 .mv-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;
   padding:5px 10px;border-radius:10px;background:rgba(169,139,255,.08);
   border:1px solid rgba(169,139,255,.18);font-size:10px;color:#b9a8e8;

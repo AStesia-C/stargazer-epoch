@@ -487,9 +487,11 @@ const Renderer = {
       ctx.drawImage(this.bg, -this.w*.03 - this.cam.x*par, -this.h*.03 - this.cam.y*par, this.w*1.06, this.h*1.06);
     }
 
+    this.checkLayerIntro();
     this.drawGalaxy(ctx);
     this.drawUniverse(ctx);
     this.drawVisions(ctx);
+    this.drawReveal(ctx);
     this.drawUniverseLabel(ctx);
     this.drawWarn(ctx);
     this.drawMeteors(ctx);
@@ -534,6 +536,8 @@ const Renderer = {
     if(z >= .26) return;
     if(!this.galaxyPts) this.buildGalaxy();
     const k = U.clamp((.26 - z) / .11, 0, 1);
+    const um = 1 + 1.7 * this.pulseAmt('universe');
+    const gm = 1 + 1.7 * this.pulseAmt('galaxy');
     const cam = this.cam, cx = this.cx, cy = this.cy;
     const px = (wx)=> wx*z + cx - cam.x*z;
     const py = (wy)=> wy*z + cy - cam.y*z;
@@ -543,15 +547,15 @@ const Renderer = {
       for(const g of this.uniGalaxies){
         const x = px(g.x), y = py(g.y);
         if(x < -90 || x > this.w+90 || y < -90 || y > this.h+90) continue;
-        const s = Math.max(3, g.s * z * 9);
-        ctx.globalAlpha = Math.min(.62, (.18 + g.a) * uk);
+        const s = Math.max(3, g.s * z * 9) * (1 + (um-1)*.5);
+        ctx.globalAlpha = Math.min(.85, (.18 + g.a) * uk * um);
         ctx.drawImage(g.a > .26 ? this.ringSprite : this.sectorGlow, x - s/2, y - s/2, s, s);
-        ctx.globalAlpha = Math.min(.6, (.18 + g.a * .8) * uk);
+        ctx.globalAlpha = Math.min(.85, (.18 + g.a * .8) * uk * um);
         ctx.fillStyle = g.a > .3 ? '#ffe6b8' : '#dcebff';
         ctx.beginPath(); ctx.ellipse(x, y, s*.8, s*.26, g.rot, 0, Math.PI*2); ctx.fill();
       }
     }
-    const a0 = (.04 + .2*k) * U.clamp((z - .085) / .03, 0, 1);
+    const a0 = (.04 + .2*k) * U.clamp((z - .085) / .03, 0, 1) * gm;
     let lastA = -1;
     const stride = z < .22 ? 2 : 1;
     for(let pi=0; pi<this.galaxyPts.length; pi+=stride){
@@ -559,7 +563,7 @@ const Renderer = {
       const x = px(p.x), y = py(p.y);
       if(x < -8 || x > this.w+8 || y < -8 || y > this.h+8) continue;
       const s = Math.max(1, p.s * Math.max(.7, z*7));
-      const a = a0 * p.a;
+      const a = Math.min(.95, a0 * p.a);
       if(Math.abs(a - lastA) > .04){ ctx.globalAlpha = a; lastA = a; }
       ctx.fillStyle = '#9fc4ff';
       ctx.fillRect(x, y, s, s);
@@ -731,6 +735,7 @@ const Renderer = {
     if(z < .14 || z > .34) return;
     const k = U.clamp(1 - Math.abs(z - .21) / .13, 0, 1);
     if(k <= .01) return;
+    const pm = 1 + 1.6 * this.pulseAmt('arm');
     const cam = this.cam;
     const px = (wx)=> wx*z + this.cx - cam.x*z;
     const py = (wy)=> wy*z + this.cy - cam.y*z;
@@ -747,7 +752,7 @@ const Renderer = {
           const x = px(Math.cos(a)*r), y = py(Math.sin(a)*r*1.02);
           if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = U.rgba(tint, (pass ? .022 : .045) * k);
+        ctx.strokeStyle = U.rgba(tint, Math.min(.18, (pass ? .022 : .045) * k * pm));
         ctx.lineWidth = (pass ? 70 : 26) * Math.max(.6, Math.sqrt(z * 3.2));
         ctx.stroke();
       }
@@ -796,6 +801,7 @@ const Renderer = {
     if(z < .24 || z > .62) return;
     const k = U.clamp(Math.min((z - .24) / .05, (.62 - z) / .14), 0, 1);
     if(k <= .01) return;
+    const pm = 1 + 1.6 * this.pulseAmt('const');
     const cam = this.cam, w = this.w, h = this.h;
     const now = U.now();
     if(!this.constIndex || now - this.constIndexAt > 900) this.buildConstIndex();
@@ -825,13 +831,13 @@ const Renderer = {
         if(a.x < -20 || a.x > w+20 || a.y < -20 || a.y > h+20) continue;
         if(b.x < -20 || b.x > w+20 || b.y < -20 || b.y > h+20) continue;
         const on = a.on && b.on;
-        ctx.globalAlpha = (on ? (.09 + .30*avg) : .03) * k;
+        ctx.globalAlpha = Math.min(1, (on ? (.09 + .30*avg) : .03) * k * pm);
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
       }
       for(const f of sp){
         if(!f.on) continue;
         if(f.x < -20 || f.x > w+20 || f.y < -20 || f.y > h+20) continue;
-        ctx.globalAlpha = (.28 + .45*avg) * k;
+        ctx.globalAlpha = Math.min(1, (.28 + .45*avg) * k * pm);
         ctx.fillStyle = '#dff0ff';
         ctx.beginPath(); ctx.arc(f.x, f.y, Math.max(.9, 1.4*Math.sqrt(z)), 0, Math.PI*2); ctx.fill()
       }
@@ -988,6 +994,52 @@ const Renderer = {
       ctx.globalAlpha = .5;
       ctx.fillStyle = '#ffe9b0';
       ctx.beginPath(); ctx.arc(s.x, s.y, 1.6, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  },
+
+  intro:null, reveal:null, lastLayer:null,
+
+  checkLayerIntro(){
+    const l = Uni.layerOf(this.cam.zoom);
+    if(this.lastLayer === null){ this.lastLayer = l.id; return; }
+    if(l.id === this.lastLayer) return;
+    this.lastLayer = l.id;
+    if(l.id === 'sector') return;
+    const S = G.S.data;
+    S.seenLayers = S.seenLayers || {};
+    if(S.seenLayers[l.id]) return;
+    S.seenLayers[l.id] = 1;
+    this.intro = {layer:l.id, t0:U.now(), dur:3000};
+    if(G.UI && G.UI.layerIntro) G.UI.layerIntro(l);
+  },
+
+  pulseAmt(layer){
+    const i = this.intro;
+    if(!i || i.layer !== layer) return 0;
+    const t = (U.now() - i.t0) / i.dur;
+    if(t >= 1){ this.intro = null; return 0; }
+    if(t < .12) return t / .12;
+    if(t < .55) return 1;
+    return (1 - t) / .45;
+  },
+
+  drawReveal(ctx){
+    const r = this.reveal;
+    if(!r) return;
+    const t = (U.now() - r.t0) / r.dur;
+    if(t >= 1){ this.reveal = null; return; }
+    const e = U.easeOutCubic(t);
+    const s = this.screen(0,0);
+    const rad = U.lerp(r.r0, r.r1, e) * this.cam.zoom;
+    if(rad < 2) return;
+    ctx.globalCompositeOperation = 'lighter';
+    for(let i=0;i<2;i++){
+      ctx.globalAlpha = (1-t) * (i ? .16 : .5);
+      ctx.strokeStyle = '#ffd36b';
+      ctx.lineWidth = (i ? 9 : 2.2) * (1 - t*.6);
+      ctx.beginPath(); ctx.arc(s.x, s.y, rad, 0, Math.PI*2); ctx.stroke();
     }
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -1232,9 +1284,15 @@ const Renderer = {
   },
 
   setVision(){
+    const v = G.S.data.vision;
     const z = this.fitZoom();
-    this.flyTo(0, 0, z, 1500);
+    this.flyTo(0, 0, z, 1700);
     this.buildBackground();
+    if(v > 1){
+      this.reveal = {r0:(CFG.VISIONS[v-2].ring + .55) * S,
+                     r1:(CFG.VISIONS[v-1].ring + .55) * S,
+                     t0:U.now(), dur:2600};
+    }
   }
 };
 

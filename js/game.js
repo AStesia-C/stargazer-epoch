@@ -81,11 +81,7 @@ const Game = {
       R.setVision();
       UI.flash();
       G.Audio.milestone();
-      const ch = CFG.CHAPTERS[Econ.chapterIndex()];
-      UI.cinema({big:'视野扩展', small:'视野 ' + G.ROMAN[S.vision-1] + ' · ' + Econ.visionInfo().name, dur:3400});
-      setTimeout(()=>{
-        UI.toast('新的星域已进入观测范围', 'gold');
-      }, 600);
+      UI.cinema({big:'视野 ' + G.ROMAN[S.vision-1], small:Econ.visionInfo().name, dur:2400});
     });
     G.Bus.on('megaBuilt', (m)=>{
       const def = m.def;

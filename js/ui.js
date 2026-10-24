@@ -55,6 +55,16 @@ const UI = {
     this.dom.app.classList.toggle('dark-mode', dark);
   },
 
+  layerIntro(l){
+    const line = this.dom.layerLine || document.querySelector('#layer-line');
+    if(!line) return;
+    line.classList.remove('intro');
+    void line.offsetWidth;
+    line.classList.add('intro');
+    clearTimeout(this._introT);
+    this._introT = setTimeout(()=>line.classList.remove('intro'), 2800);
+  },
+
   flashRed(){
     if(G.S.data.settings.reduceFx) return;
     const f = this.dom.flash;
