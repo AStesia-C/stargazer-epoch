@@ -335,16 +335,60 @@ const UI = {
       n.style.left = p.x + 'px'; n.style.top = p.y + 'px';
       n.style.width = NODE_W + 'px';
       n.innerHTML = '<div class="n-name">' + t.name + '</div><div class="n-cost">研究 ' + t.cost + '</div>';
-      n.onclick = ()=>this.openTech(t);
+      n.onclick = ()=>{ if(dragged){ dragged = 0; return; } this.openTech(t); };
       inner.appendChild(n);
       nodes.push({t, n});
     }
-    const scrollWrap = el('div');
-    scrollWrap.style.cssText = 'overflow-x:auto;overflow-y:hidden;margin:0 -4px;padding:0 4px;-webkit-overflow-scrolling:touch';
+    const scrollWrap = el('div','tech-scroll');
     scrollWrap.appendChild(inner);
     wrap.appendChild(scrollWrap);
     this.dom.body.appendChild(wrap);
-    this.dom.body.appendChild(el('div','log-item','拖动可横向浏览科技树'));
+
+    let dragged = 0, panX = 0, panFrom = 0, vel = 0, lastX = 0, lastT = 0, raf = 0, panning = false;
+    const stopPan = ()=>{ if(raf){ cancelAnimationFrame(raf); raf = 0; } };
+    scrollWrap.addEventListener('pointerdown', e=>{
+      if(e.button > 0) return;
+      stopPan(); dragged = 0; panning = true;
+      panX = e.clientX; panFrom = scrollWrap.scrollLeft;
+      lastX = e.clientX; lastT = performance.now(); vel = 0;
+    });
+    scrollWrap.addEventListener('pointermove', e=>{
+      if(!panning) return;
+      const dx = e.clientX - panX;
+      if(Math.abs(dx) > 4 && !dragged){
+        dragged = 1;
+        scrollWrap.classList.add('panning');
+      }
+      if(dragged) scrollWrap.scrollLeft = panFrom - dx;
+      const now = performance.now(), dt = now - lastT;
+      if(dt > 0){ vel = (e.clientX - lastX) / dt; lastX = e.clientX; lastT = now; }
+    });
+    const endPan = ()=>{
+      if(!panning) return;
+      panning = false;
+      scrollWrap.classList.remove('panning');
+      let v = -vel * 16;
+      if(Math.abs(v) > 1.2){
+        const glide = ()=>{
+          if(Math.abs(v) < .4){ raf = 0; return; }
+          scrollWrap.scrollLeft += v; v *= .9;
+          raf = requestAnimationFrame(glide);
+        };
+        raf = requestAnimationFrame(glide);
+      }
+    };
+    scrollWrap.addEventListener('pointerup', endPan);
+    scrollWrap.addEventListener('pointercancel', ()=>{ panning = false; scrollWrap.classList.remove('panning'); });
+    scrollWrap.addEventListener('pointerleave', endPan);
+
+    const availCols = CFG.TECH.filter(t=>!G.S.data.tech[t.id] && G.Econ.techAvailable(t)).map(t=>t.col);
+    const ownedCols = CFG.TECH.filter(t=>G.S.data.tech[t.id]).map(t=>t.col);
+    const focusCol = availCols.length ? Math.max.apply(null, availCols) : (ownedCols.length ? Math.max.apply(null, ownedCols) : 0);
+    requestAnimationFrame(()=>{
+      const w = scrollWrap.clientWidth;
+      const target = OX + focusCol*COL + NODE_W/2 - w/2;
+      scrollWrap.scrollLeft = Math.max(0, Math.min(inner.clientWidth - w, target));
+    });
 
     const upd = ()=>{
       const S2 = G.S.data;
