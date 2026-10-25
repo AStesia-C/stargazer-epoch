@@ -18,6 +18,7 @@ const UI = {
       app:qs('#app'), count:qs('#count'), rate:qs('#rate'), bar:qs('#barfill'),
       progress:qs('#progress-label'), vision:qs('#vision'), chapter:qs('#chapter'),
       layerName:qs('#layer-name'), layerUnit:qs('#layer-unit'), combo:qs('#combo-chip'),
+      layerLine:qs('#layer-line'),
       chapterSub:qs('#chapter-sub'), tabs:qs('#tabs'), body:qs('#tab-body'),
       sheet:qs('#sheet'), toast:qs('#toasts'), modal:qs('#modal-root'),
       buffs:qs('#buffbar'), hint:qs('#hint'), cinema:qs('#cinema'), flash:qs('#flash'),
@@ -123,7 +124,7 @@ const UI = {
     const onMove = (e)=>{
       if(dragId === null || e.pointerId !== dragId) return;
       const dy = startY - e.clientY;
-      const nh = U.clamp(startH + dy, this.dom.app.clientHeight*.34, this.dom.app.clientHeight*.9);
+      const nh = U.clamp(startH + dy, this.dom.app.clientHeight*.2, this.dom.app.clientHeight*.9);
       this.dom.sheet.style.transition = 'none';
       this.dom.sheet.style.height = nh + 'px';
     };
@@ -921,6 +922,11 @@ const UI = {
   update(dt){
     const S = G.S.data;
     if(!this.dom) return;
+    const exp = this.dom.sheet.classList.contains('expanded');
+    if(exp !== this._exp){
+      this._exp = exp;
+      this.dom.app.classList.toggle('sheet-open', exp);
+    }
     const d = G.Econ.d;
     const now = performance.now();
     if(now - this.lastHud > 70){

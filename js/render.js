@@ -58,11 +58,19 @@ const Renderer = {
     this.initialized = true;
   },
 
+  band(){
+    const hud = document.getElementById('hud');
+    const top = hud ? hud.getBoundingClientRect().bottom : this.h * .22;
+    const bottom = this.h * .79;
+    return {top, bottom, h: Math.max(200, bottom - top)};
+  },
+
   fitZoom(){
     const ring = CFG.VISIONS[G.S.data.vision - 1].ring;
     const r = (ring + .55) * S;
-    const avail = Math.min(this.w * .5 - 16, this.h * .375 - 152, this.h * .215);
-    return Math.max(.08, avail / r);
+    const band = this.band();
+    const avail = Math.min(this.w * .5 - 14, band.h * .5 - 8);
+    return Math.max(.06, avail / r);
   },
 
   buildSprites(){
@@ -103,7 +111,8 @@ const Renderer = {
       this.cam.zoom = this.target.zoom = Math.min(this.cam.zoom, this.fitZoom() * 1.4);
     }
     this.cx = this.w/2;
-    this.cy = this.h*0.375;
+    const band = this.band();
+    this.cy = U.clamp(band.top + band.h * .5, this.h * .3, this.h * .62);
     this.minimap = document.getElementById('minimap-canvas');
   },
 
@@ -587,10 +596,10 @@ const Renderer = {
     ctx.globalAlpha = a;
     ctx.fillStyle = 'rgba(206,224,255,.92)';
     ctx.font = '600 11px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
-    ctx.fillText('本宇宙 · 2,000 亿颗', this.w/2, 246);
+    ctx.fillText('本宇宙 · 2,000 亿颗', this.w/2, this.cy - 76);
     ctx.globalAlpha = a * .55;
     ctx.font = '500 9px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
-    ctx.fillText('已观测 ' + (G.Econ.mvCoverage()*100).toFixed(3) + '%', this.w/2, 262);
+    ctx.fillText('已观测 ' + (G.Econ.mvCoverage()*100).toFixed(3) + '%', this.w/2, this.cy - 60);
     ctx.restore();
   },
 
