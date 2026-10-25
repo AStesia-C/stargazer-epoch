@@ -118,9 +118,6 @@ body{display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(8px);animation:buffIn .3s ease}
 @keyframes buffIn{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
 
-#hint{position:absolute;left:12px;right:88px;bottom:calc(22% + 14px);text-align:center;font-size:10px;white-space:nowrap;
-  color:rgba(180,200,235,.5);letter-spacing:.12em;z-index:11;pointer-events:none;transition:opacity .8s}
-#hint.gone{opacity:0}
 
 #minimap{position:absolute;right:14px;bottom:calc(22% + 12px);width:66px;height:66px;z-index:12;
   border-radius:14px;overflow:hidden;border:1px solid rgba(126,176,255,.18);

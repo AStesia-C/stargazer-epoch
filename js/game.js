@@ -20,8 +20,6 @@ const Game = {
     if(!S.intro){
       S.intro = true;
       setTimeout(()=>UI.openIntro(), 650);
-    } else if(S.stats.clicks < 4){
-      setTimeout(()=>UI.toast('点击星图开始观测', 'gold'), 900);
     }
 
     this.last = performance.now();
@@ -37,7 +35,7 @@ const Game = {
       G.Audio.warn(w.stage);
     });
     G.Bus.on('modeChange', (mode)=>{
-      UI.toast(mode === 'extinguish' ? '进入熄灭模式：点击将熄灭恒星' : '回到观测模式', mode === 'extinguish' ? 'red' : '');
+      UI.toast(mode === 'extinguish' ? '熄灭模式' : '观测模式', mode === 'extinguish' ? 'red' : '');
       UI.updateMode();
     });
     G.Bus.on('vacuum', (v)=>{
@@ -55,14 +53,14 @@ const Game = {
         UI.flash();
         return;
       }
-      const label = '里程碑 · ' + m.name;
+      const label = m.name;
       UI.toast(label + (m.r ? '  +' + m.r + ' 研究' : ''), 'gold');
       G.Audio.milestone();
       UI.flash();
       if(!m.prestige && [1e6,1e9,1e11,1e15,1e18,1e21].includes(m.n)){
         UI.cinema({big:m.name, small:fmtNum(m.n) + ' 颗恒星已记录', dur:3000});
       }
-      if(m.prestige) UI.toast('跃迁已解锁 · 前往档案馆', 'gold');
+      if(m.prestige) UI.toast('跃迁解锁', 'gold');
     });
     G.Bus.on('sectorComplete', (c)=>{
       const now = U.now();
@@ -111,22 +109,17 @@ const Game = {
       return;
     }
     const res = Econ.click(wx, wy);
-    UI.onTapFeedback(res);
     if(res.locked){
-      R.addFloat(sx, sy, '视野之外', '#7b8cb0', 11);
+      R.addRipple(sx, sy, '#2f3a52');
       return;
     }
     if(res.readonly){
+      R.addRipple(sx, sy, '#5b6b8c');
       R.flyTo(wx, wy, .5, 700);
-      if(!this._roHint || U.now() - this._roHint > 6000){
-        this._roHint = U.now();
-        R.addFloat(sx, sy, '这一层只能看 · 正在飞近', '#9fb0cc', 11);
-      }
       return;
     }
     if(res.capped){
       R.addRipple(sx, sy, '#5b6b8c');
-      R.addFloat(sx, sy, '星区已满 · 向更深处观测', '#9fb0cc', 11);
       return;
     }
     const combo = res.combo || 1;
@@ -172,11 +165,11 @@ const Game = {
   extinguishTap(wx, wy, sx, sy){
     const res = Econ.extinguishClick(wx, wy);
     if(res.locked){
-      R.addFloat(sx, sy, '视野之外', '#7b8cb0', 11);
+      R.addRipple(sx, sy, '#2f3a52');
       return;
     }
     if(res.full){
-      R.addFloat(sx, sy, '这片星域已经空了', '#d9364a', 11);
+      R.addRipple(sx, sy, '#5b6b8c');
       return;
     }
     R.addRipple(sx, sy, '#d9364a');
@@ -189,7 +182,6 @@ const Game = {
       }
     }
     G.Audio.extinguish();
-    UI.onTapFeedback(res);
   },
 
   collectMeteor(met, sx, sy){
@@ -327,9 +319,9 @@ const Game = {
       const full = Uni.ensureIncomplete().length === 0;
       if(full && !this._sat){
         this._sat = true;
-        if(Econ.sealReady()) UI.toast('本宇宙已饱和 · 可在档案馆闭合宇宙', 'gold');
-        else if(Econ.prestigeReady()) UI.toast('星核已足够 · 前往档案馆大坍缩', 'gold');
-        else UI.toast('视野已饱和 · 研究科技扩展视野', 'gold');
+        if(Econ.sealReady()) UI.toast('本宇宙已饱和', 'gold');
+        else if(Econ.prestigeReady()) UI.toast('星核已齐', 'gold');
+        else UI.toast('视野已饱和', 'gold');
       } else if(!full){
         this._sat = false;
       }

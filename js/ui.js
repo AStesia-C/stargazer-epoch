@@ -10,7 +10,6 @@ const UI = {
   toasts:[],
   lastHud:0,
   lastBadge:0,
-  hintClicks:0,
   dragging:false,
 
   init(){
@@ -21,7 +20,7 @@ const UI = {
       layerLine:qs('#layer-line'),
       chapterSub:qs('#chapter-sub'), tabs:qs('#tabs'), body:qs('#tab-body'),
       sheet:qs('#sheet'), toast:qs('#toasts'), modal:qs('#modal-root'),
-      buffs:qs('#buffbar'), hint:qs('#hint'), cinema:qs('#cinema'), flash:qs('#flash'),
+      buffs:qs('#buffbar'), cinema:qs('#cinema'), flash:qs('#flash'),
       sound:qs('#btn-sound'), menu:qs('#btn-menu'),
       handle:qs('#sheet-handle'), minimap:qs('#minimap'),
       mvLine:qs('#mv-line'), mvCount:qs('#mv-count'), mvMod:qs('#mv-mod'),
@@ -307,10 +306,6 @@ const UI = {
     };
     this.updaters.push(upd);
     upd();
-    this.sectionHead('观星手记', '');
-    const note = el('div','log-item');
-    note.innerHTML = '<span class="no">提示</span>连击间隔小于 0.4 秒。暴击会让整片星域一起亮起来。';
-    this.dom.body.appendChild(note);
   },
 
   buildTech(){
@@ -457,10 +452,9 @@ const UI = {
         if(G.Econ.buyDarkTech(def)){
           G.Audio.tech();
           this.toast('暗科技掌握：' + def.name, 'red');
-          if(def.id === 'd1') this.toast('点击左下角开关进入熄灭模式', 'red');
           if(def.id === 'd9') this.toast('熄灭的恒星已全部重燃', 'gold');
           updDark();
-        } else this.toast('暗物质或碎片不足');
+        } else this.toast('资源不足');
       };
       this.dom.body.appendChild(c);
       cards.push({def, c, btn, price:c.querySelector('.p'), meta:c.querySelector('.r-meta')});
@@ -471,10 +465,7 @@ const UI = {
       '<div class="r-desc">瞬间熄灭视野内 5% 的恒星（冷却 5 分钟）</div><div class="r-meta"></div></div>' +
       '<button class="buy"><span class="p">发动</span><em>技能</em></button>';
     const vacBtn = vac.querySelector('.buy');
-    vacBtn.onclick = ()=>{
-      const hit = G.Econ.vacuum();
-      if(hit === false) this.toast('尚未掌握，或技能冷却中');
-    };
+    vacBtn.onclick = ()=>{ G.Econ.vacuum(); };
     this.dom.body.appendChild(vac);
     const vacMeta = vac.querySelector('.r-meta');
 
@@ -516,7 +507,7 @@ const UI = {
           G.Audio.tech();
           G.Bus.emit('megaBought', def);
           upd();
-        } else this.toast('星尘不足，或尚未解锁');
+        }
       };
       this.dom.body.appendChild(c);
       cards.push({def, c, cost:c.querySelector('.mega-cost'), btn:c.querySelector('.mega-build')});
@@ -781,14 +772,12 @@ const UI = {
       '「完整记录宇宙者，可叩问门扉。」</p>' +
       '<p style="font-size:11.5px;line-height:2;color:#aebadb">你是全天星表计划的首席观测官。<br>' +
       '你的起点，是一台旧望远镜，和一片看不清的夜空。</p>' +
-      '<div class="stat-line"><span>目标</span><b>记录 10²⁴ 颗恒星</b></div>' +
-      '<div class="stat-line"><span>第一步</span><b>点击星图</b></div>';
+      '<div class="stat-line"><span>目标</span><b>记录 10²⁴ 颗恒星</b></div>';
     this.openModal({title:'观星者纪元', sub:'STARGAZER EPOCH', body, actions:[
       {label:'开始观测', cls:'primary', close:true, onClick:()=>{
         G.Audio.resume();
         const S = G.S.data;
         if(S.settings.music) G.Audio.startMusic();
-        this.toast('点击星空，记录第一颗星', 'gold');
       }}
     ]});
   },
@@ -801,8 +790,8 @@ const UI = {
       '<div class="settings-row"><span>背景音乐</span><div class="switch' + (S.settings.music?' on':'') + '" id="sw-mus"><i></i></div></div>' +
       '<div class="settings-row"><span>减少动态效果</span><div class="switch' + (S.settings.reduceFx?' on':'') + '" id="sw-fx"><i></i></div></div>' +
       '<div class="settings-row"><span>自动采购设施</span><div class="switch' + (S.settings.autoBuy?' on':'') + '" id="sw-auto"><i></i></div></div>' +
-      '<p style="margin-top:16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7">观测日志会自动保存在本机。' +
-      '当前版本：v0.9 竖屏原型。<br>玩法：点击星图观测，购买设施自动观测，积累研究点解锁科技与更远的视野。</p>';
+      '<p style="margin-top:16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7">观测日志会自动保存在本机。<br>' +
+      '当前版本：v0.9 竖屏原型。</p>';
     const toggle = (id, key, after)=>{
       body.querySelector('#'+id).onclick = ()=>{
         S.settings[key] = !S.settings[key];
@@ -823,8 +812,8 @@ const UI = {
   openHelp(){
     const body = el('div');
     body.innerHTML = '<p>你把镜头对准夜空。<br>它回以光。</p>' +
-      '<p>点一下星图，就把看到的星记下来。<br>星尘会替你继续看下去；星区被看满时，会留下研究点。</p>' +
-      '<p>点得越快，手越热；缩得越远，一次记得越多。<br>旋臂之外只能看——点一下，镜头会自己飞近。</p>' +
+      '<p>星尘会替你继续看下去。<br>被看满的星区，会留下一点研究。</p>' +
+      '<p>点得越久，手越热。<br>缩得越远，一次记住的越多。</p>' +
       '<p style="color:var(--red);font-size:11px">10¹³ 颗之后，有一段不该存在的信号在等你。</p>';
     this.openModal({title:'观测手册', sub:'HOW TO PLAY', body, actions:[{label:'开始观测', cls:'primary', close:true}]});
   },
@@ -1008,12 +997,6 @@ const UI = {
     if(b) b.classList.toggle('on', !!on);
   },
 
-  onTapFeedback(result){
-    this.hintClicks++;
-    if(this.hintClicks > 3 && !this.dom.hint.classList.contains('gone')){
-      this.dom.hint.classList.add('gone');
-    }
-  }
 };
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII'];

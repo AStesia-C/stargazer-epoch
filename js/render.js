@@ -327,7 +327,7 @@ const Renderer = {
   handleTap(sx, sy){
     const wp = this.world(sx, sy);
     const sec = Uni.sectorAtWorld(wp.x, wp.y);
-    if(!Uni.isUnlocked(sec.x, sec.y)){ this.addFloat(sx, sy, '视野之外', '#7b8cb0', 11); return; }
+    if(!Uni.isUnlocked(sec.x, sec.y)){ this.addRipple(sx, sy, '#2f3a52'); return; }
     const near = Uni.nearestStar(wp.x, wp.y, 30 / this.cam.zoom);
     if(near){
       this.clickMarks.set(near.sx + ',' + near.sy + ',' + near.i, U.now());
@@ -497,6 +497,7 @@ const Renderer = {
     }
 
     this.checkLayerIntro();
+    this.drawFirstNudge(ctx);
     this.drawGalaxy(ctx);
     this.drawUniverse(ctx);
     this.drawVisions(ctx);
@@ -1009,6 +1010,23 @@ const Renderer = {
   },
 
   intro:null, reveal:null, lastLayer:null,
+
+  drawFirstNudge(ctx){
+    if((G.S.data.stats.clicks || 0) > 0) return;
+    if(G.S.data.settings.reduceFx) return;
+    const s = this.screen(0, 0);
+    const t = (U.now() % 2800) / 2800;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = '#9fd0ff';
+    for(let i=0;i<2;i++){
+      const tt = (t + i * .5) % 1;
+      ctx.globalAlpha = (1 - tt) * .34;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 11 + tt * 44, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  },
 
   checkLayerIntro(){
     const l = Uni.layerOf(this.cam.zoom);
